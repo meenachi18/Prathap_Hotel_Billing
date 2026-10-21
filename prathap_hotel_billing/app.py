@@ -235,7 +235,7 @@ def sales_history():
     rows = con.execute("SELECT * FROM sales ORDER BY id DESC LIMIT 500").fetchall()
     # Compare using local date from Python, avoiding UTC/local SQLite date mismatches.
     today = datetime.now().astimezone().date().isoformat()
-    today_rows = con.execute("SELECT subtotal,payment_method,payment_status FROM sales").fetchall()
+    today_rows = con.execute("SELECT created_at,subtotal,payment_method,payment_status FROM sales").fetchall()
     total_today = cash_today = upi_today = 0.0
     bills_today = pending_today = 0
     for r in today_rows:
