@@ -74,7 +74,7 @@ def init_db():
         con.execute("UPDATE menu SET image_url=? WHERE id=?", (image, row["id"]))
     con.commit()
     con.close()
-
+init_db()
 @app.route("/")
 def index():
     con = db()
