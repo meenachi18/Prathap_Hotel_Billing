@@ -1,0 +1,5 @@
+hotel_billing.db
+*.db
+.env
+.venv/
+__pycache__/
