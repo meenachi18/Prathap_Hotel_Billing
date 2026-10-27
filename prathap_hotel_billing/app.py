@@ -57,18 +57,52 @@ def init_db():
         amount_received REAL NOT NULL DEFAULT 0, change_due REAL NOT NULL DEFAULT 0,
         payment_status TEXT NOT NULL DEFAULT 'paid', note TEXT DEFAULT ''
     )""")
+    
     count = con.execute("SELECT COUNT(*) FROM menu").fetchone()[0]
+
     if count == 0:
-        con.executemany("INSERT INTO menu(name,price,category,image_url) VALUES(?,?,?,?)", DEFAULT_MENU)
-    # Repair old databases where menu images were missing or referenced non-existent files.
-    for row in con.execute("SELECT id,image_url FROM menu").fetchall():
-        image = row["image_url"] or ""
-        if not image.startswith("/static/images/"):
-            image = "/static/images/food_01.jpg"
-        con.execute("UPDATE menu SET image_url=? WHERE id=?", (image, row["id"]))
+        con.executemany(
+            "INSERT INTO menu(name,price,category,image_url) VALUES(?,?,?,?)",
+            DEFAULT_MENU
+        )
+
+    # Update existing menu items with the correct image paths.
+    image_map = {
+        "Porata": "/static/images/porata.jpeg",
+        "Ghee Porata": "/static/images/ghee porata.jpeg",
+        "Egg Kuttu Porata": "/static/images/egg porata.jpeg",
+        "Chicken Kuttu Porata": "/static/images/chicken kothu porata.jpeg",
+        "Dosa": "/static/images/dosai.jpeg",
+        "Egg Dosa": "/static/images/egg dosai.jpeg",
+        "Onion Dosa": "/static/images/onion dosai.jpeg",
+        "Podi Dosa": "/static/images/podi dosai.jpeg",
+        "Kuska": "/static/images/kuska.jpeg",
+        "Egg Kuska": "/static/images/egg kuska.jpeg",
+        "Meals (Non-veg & Veg)": "/static/images/full mealss.jpeg",
+        "Half Meals (Veg)": "/static/images/half meals.jpeg",
+        "Chicken Biriyani": "/static/images/chicken biriyani.jpeg",
+        "Egg Biriyani": "/static/images/egg biriyaniii.jpeg",
+        "Chicken Fry": "/static/images/chicken fry.jpeg",
+        "Chicken 65": "/static/images/65.jpeg",
+        "Fried Fish": "/static/images/fish fry.jpeg",
+        "Crab Nandu": "/static/images/nandu.jpeg",
+        "Boil Egg Masal": "/static/images/masala egg.jpeg",
+        "Omelete": "/static/images/omblete.jpeg",
+        "Boil Egg": "/static/images/boil egg.jpeg",
+    }
+
+    for name, image in image_map.items():
+        con.execute(
+            "UPDATE menu SET image_url=? WHERE name=?",
+            (image, name)
+        )
+
     con.commit()
     con.close()
+
+
 init_db()
+
 @app.route("/")
 def index():
     con = db()
