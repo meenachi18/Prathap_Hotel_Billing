@@ -15,33 +15,38 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 DEFAULT_MENU = [
-    ("Porata",20,"Porata","/static/images/food_01.jpg"),
-    ("Open Veechu Porata",20,"Porata","/static/images/food_02.jpg"),
-    ("Onion Porata",35,"Porata","/static/images/food_03.jpg"),
-    ("Chocolate Porata",35,"Porata","/static/images/food_04.jpg"),
-    ("Ghee Porata",40,"Porata","/static/images/food_05.jpg"),
-    ("Egg Veechu Porata",50,"Porata","/static/images/food_06.jpg"),
-    ("Double Egg Veechu Porata",60,"Porata","/static/images/food_07.jpg"),
-    ("Omelet Porata",70,"Porata","/static/images/food_08.jpg"),
-    ("Egg Kuttu Porata",80,"Porata","/static/images/food_09.jpg"),
-    ("Chicken Kuttu Porata",100,"Porata","/static/images/food_10.jpg"),
-    ("Dosa",40,"Tiffin","/static/images/food_11.jpg"),
-    ("Egg Dosa",60,"Tiffin","/static/images/food_12.jpg"),
-    ("Onion Dosa",60,"Tiffin","/static/images/food_13.jpg"),
-    ("Podi Dosa",50,"Tiffin","/static/images/food_14.jpg"),
-    ("Chocolate Dosa",50,"Tiffin","/static/images/food_15.jpg"),
-    ("Kuska",40,"Rice","/static/images/food_16.jpg"),
-    ("Egg Kuska",50,"Rice","/static/images/food_16.jpg"),
-    ("Meals (Non-veg & Veg)",90,"Meals","/static/images/food_12.jpg"),
-    ("Half Meals (Veg)",60,"Meals","/static/images/food_13.jpg"),
-    ("Chicken Biriyani",140,"Rice","/static/images/food_18.jpg"),
-    ("Egg Biriyani",80,"Rice","/static/images/food_19.jpg"),
-    ("Chicken Fry",100,"Side Dishes","/static/images/food_08.jpg"),
-    ("Fried Fish",50,"Side Dishes","/static/images/food_07.jpg"),
-    ("Crab Nandu",60,"Side Dishes","/static/images/food_06.jpg"),
-    ("Boil Egg Masal",30,"Side Dishes","/static/images/food_05.jpg"),
-    ("Omelete",20,"Side Dishes","/static/images/food_04.jpg"),
-    ("Boil Egg",10,"Side Dishes","/static/images/food_03.jpg"),
+    DEFAULT_MENU = [
+    ("Porata", 20, "Porata", "/static/images/65.jpeg"),
+    ("Open Veechu Porata", 20, "Porata", "/static/images/veechu egg porata.jpeg"),
+    ("Onion Porata", 35, "Porata", "/static/images/onion dosai.jpeg"),
+    ("Chocolate Porata", 35, "Porata", "/static/images/images (4).jpeg"),
+    ("Ghee Porata", 40, "Porata", "/static/images/ghee porata.jpeg"),
+    ("Egg Veechu Porata", 50, "Porata", "/static/images/veechu egg porata.jpeg"),
+    ("Double Egg Veechu Porata", 60, "Porata", "/static/images/egg porata.jpeg"),
+    ("Omelet Porata", 70, "Porata", "/static/images/omblete.jpeg"),
+    ("Egg Kuttu Porata", 80, "Porata", "/static/images/egg porata.jpeg"),
+    ("Chicken Kuttu Porata", 100, "Porata", "/static/images/chicken kothu porata.jpeg"),
+
+    ("Dosa", 40, "Tiffin", "/static/images/dosai.jpeg"),
+    ("Egg Dosa", 60, "Tiffin", "/static/images/egg dosai.jpeg"),
+    ("Onion Dosa", 60, "Tiffin", "/static/images/onion dosai.jpeg"),
+    ("Podi Dosa", 50, "Tiffin", "/static/images/podi dosai.jpeg"),
+
+    ("Kuska", 40, "Rice", "/static/images/kuska.jpeg"),
+    ("Egg Kuska", 50, "Rice", "/static/images/kuskaa.jpeg"),
+    ("Meals (Non-veg & Veg)", 90, "Meals", "/static/images/full mealss.jpeg"),
+    ("Half Meals (Veg)", 60, "Meals", "/static/images/half meals.jpeg"),
+
+    ("Chicken Biriyani", 140, "Rice", "/static/images/chicken biriyani.jpeg"),
+    ("Egg Biriyani", 80, "Rice", "/static/images/egg biriyani.jpeg"),
+
+    ("Chicken Fry", 100, "Side Dishes", "/static/images/chicken fry.jpeg"),
+    ("Fried Fish", 50, "Side Dishes", "/static/images/fish fry.jpeg"),
+    ("Crab Nandu", 60, "Side Dishes", "/static/images/nandu.jpeg"),
+    ("Boil Egg Masal", 30, "Side Dishes", "/static/images/masala egg.jpeg"),
+    ("Omelete", 20, "Side Dishes", "/static/images/omblete.jpeg"),
+    ("Boil Egg", 10, "Side Dishes", "/static/images/boil egg.jpeg"),
+]
 ]
 
 def db():
