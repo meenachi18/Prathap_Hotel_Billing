@@ -1,3 +1,217 @@
+import json
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+from flask import Flask, jsonify, render_template, request
+from werkzeug.utils import secure_filename
+
+APP_DIR = Path(__file__).resolve().parent
+DB_PATH = APP_DIR / "hotel_billing.db"
+SETTINGS_PATH = APP_DIR / "settings.json"
+app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024  # 8 MB per image
+UPLOAD_DIR = APP_DIR / "static" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+
+DEFAULT_MENU = [ 
+    ("Porata", 20, "Porata", "/static/images/porata.jpeg"),
+    ("Ghee Porata", 40, "Porata", "/static/images/ghee porata.jpeg"),
+    ("Egg Kuttu Porata", 80, "Porata", "/static/images/egg porata.jpeg"),
+    ("Chicken Kuttu Porata", 100, "Porata", "/static/images/chicken kothu porata.jpeg"),
+    ("Dosa", 40, "Tiffin", "/static/images/dosai.jpeg"),
+    ("Egg Dosa", 60, "Tiffin", "/static/images/egg dosai.jpeg"),
+    ("Onion Dosa", 60, "Tiffin", "/static/images/onion dosai.jpeg"),
+    ("Podi Dosa", 50, "Tiffin", "/static/images/podi dosai.jpeg"),
+    ("Kuska", 40, "Rice", "/static/images/kuska.jpeg"),
+    ("Egg Kuska", 50, "Rice", "/static/images/egg kuska.jpeg"),
+    ("Meals (Non-veg & Veg)", 90, "Meals", "/static/images/full mealss.jpeg"),
+    ("Half Meals (Veg)", 60, "Meals", "/static/images/half meals.jpeg"),
+    ("Chicken Biriyani", 140, "Rice", "/static/images/chicken biriyani.jpeg"),
+    ("Egg Biriyani", 80, "Rice", "/static/images/egg biriyaniii.jpeg"),
+    ("Chicken Fry", 100, "Side Dishes", "/static/images/chicken fry.jpeg"),
+    ("vadai", 10, "Side Dishes", "/static/images/boil egg.jpeg"),
+     ("Chicken 65", 50, "Side Dishes", "/static/images/65.jpeg"),
+    ("Fried Fish", 50, "Side Dishes", "/static/images/fish fry.jpeg"),
+    ("Crab Nandu", 60, "Side Dishes", "/static/images/nandu.jpeg"),
+    ("Boil Egg Masal", 30, "Side Dishes", "/static/images/masala egg.jpeg"),
+    ("Omelete", 20, "Side Dishes", "/static/images/omblete.jpeg"),
+    ("Boil Egg", 10, "Side Dishes", "/static/images/boil egg.jpeg"),
+]
+
+def db():
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    return con
+
+
+def init_db():
+    con = db()
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS menu (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            category TEXT NOT NULL,
+            image_url TEXT NOT NULL,
+            active INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            items_json TEXT NOT NULL,
+            subtotal REAL NOT NULL,
+            payment_method TEXT NOT NULL,
+            amount_received REAL NOT NULL DEFAULT 0,
+            change_due REAL NOT NULL DEFAULT 0,
+            payment_status TEXT NOT NULL DEFAULT 'paid',
+            note TEXT DEFAULT ''
+        )
+    """)
+
+    count = con.execute(
+        "SELECT COUNT(*) FROM menu"
+    ).fetchone()[0]
+
+    if count == 0:
+        con.executemany(
+            """
+            INSERT INTO menu (name, price, category, image_url)
+            VALUES (?, ?, ?, ?)
+            """,
+            DEFAULT_MENU
+        )
+
+    # Update existing menu items with the correct image paths.
+    image_map = {
+        "Porata": "/static/images/porata.jpeg",
+        "Ghee Porata": "/static/images/ghee porata.jpeg",
+        "Egg Kuttu Porata": "/static/images/egg porata.jpeg",
+        "Chicken Kuttu Porata": "/static/images/chicken kothu porata.jpeg",
+        "Dosa": "/static/images/dosai.jpeg",
+        "Egg Dosa": "/static/images/egg dosai.jpeg",
+        "Onion Dosa": "/static/images/onion dosai.jpeg",
+        "Podi Dosa": "/static/images/podi dosai.jpeg",
+        "Kuska": "/static/images/kuska.jpeg",
+        "Egg Kuska": "/static/images/egg kuska.jpeg",
+        "Meals (Non-veg & Veg)": "/static/images/full mealss.jpeg",
+        "Half Meals (Veg)": "/static/images/half meals.jpeg",
+        "Chicken Biriyani": "/static/images/chicken biriyani.jpeg",
+        "Egg Biriyani": "/static/images/egg biriyaniii.jpeg",
+        "Chicken Fry": "/static/images/chicken fry.jpeg",
+        "vadai": "/static/images/vadai.jpeg",
+        "Chicken 65": "/static/images/65.jpeg",
+        "Fried Fish": "/static/images/fish fry.jpeg",
+        "Crab Nandu": "/static/images/nandu.jpeg",
+        "Boil Egg Masal": "/static/images/masala egg.jpeg",
+        "Omelete": "/static/images/omblete.jpeg",
+        "Boil Egg": "/static/images/boil egg.jpeg",
+    }
+
+    for name, image in image_map.items():
+        con.execute(
+            "UPDATE menu SET image_url=? WHERE name=?",
+            (image, name)
+        )
+        con.execute(
+        "DELETE FROM menu WHERE name = ?",
+        ("Egg Veechu Porata",)
+    )
+
+    con.commit()
+    con.close()
+
+
+init_db()
+
+@app.route("/")
+def index():
+    con = db()
+    menu = con.execute("SELECT * FROM menu WHERE active=1 ORDER BY category,name").fetchall()
+    con.close()
+    return render_template("index.html", menu=[dict(x) for x in menu])
+
+@app.route("/api/upload-image", methods=["POST"])
+def upload_menu_image():
+    file = request.files.get("image")
+    if not file or not file.filename:
+        return jsonify(ok=False, error="Choose a food image first."), 400
+    original = secure_filename(file.filename)
+    ext = Path(original).suffix.lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        return jsonify(ok=False, error="Use JPG, JPEG, PNG, WEBP, or GIF image files."), 400
+    # Unique name avoids overwriting an image already used by another menu item.
+    filename = f"food_{datetime.now().strftime('%Y%m%d%H%M%S%f')}{ext}"
+    file.save(UPLOAD_DIR / filename)
+    return jsonify(ok=True, image_url=f"/static/uploads/{filename}")
+
+@app.route("/api/menu", methods=["GET"])
+def get_menu():
+    con = db()
+    rows = con.execute("SELECT * FROM menu ORDER BY active DESC, category, name").fetchall()
+    con.close()
+    return jsonify(ok=True, items=[dict(r) for r in rows])
+
+@app.route("/api/menu", methods=["POST"])
+def add_menu_item():
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()[:100]
+    category = str(data.get("category", "Other")).strip()[:50] or "Other"
+    try:
+        price = round(float(data.get("price")), 2)
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error="Enter a valid price."), 400
+    if not name or price < 0 or price > 100000:
+        return jsonify(ok=False, error="Enter an item name and a valid non-negative price."), 400
+    image_url = str(data.get("image_url", "/static/images/food_01.jpg")).strip()
+    if not (image_url.startswith("/static/images/") or image_url.startswith("/static/uploads/")):
+        image_url = "/static/images/food_01.jpg"
+    con = db()
+    cur = con.execute("INSERT INTO menu(name,price,category,image_url,active) VALUES(?,?,?,?,1)",
+                      (name, price, category, image_url))
+    item_id = cur.lastrowid
+    con.commit()
+    row = con.execute("SELECT * FROM menu WHERE id=?", (item_id,)).fetchone()
+    con.close()
+    return jsonify(ok=True, item=dict(row))
+
+@app.route("/api/menu/<int:item_id>", methods=["PUT", "DELETE"])
+def edit_menu_item(item_id):
+    con = db()
+    row = con.execute("SELECT * FROM menu WHERE id=?", (item_id,)).fetchone()
+    if not row:
+        con.close()
+        return jsonify(ok=False, error="Menu item not found."), 404
+    if request.method == "DELETE":
+        # Keep historical sales intact; hide the item from new bills.
+        con.execute("UPDATE menu SET active=0 WHERE id=?", (item_id,))
+        con.commit()
+        con.close()
+        return jsonify(ok=True)
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", row["name"])).strip()[:100]
+    category = str(data.get("category", row["category"])).strip()[:50] or "Other"
+    try:
+        price = round(float(data.get("price", row["price"])), 2)
+    except (TypeError, ValueError):
+        con.close()
+        return jsonify(ok=False, error="Enter a valid price."), 400
+    if not name or price < 0 or price > 100000:
+        con.close()
+        return jsonify(ok=False, error="Enter an item name and a valid non-negative price."), 400
+    image_url = str(data.get("image_url", row["image_url"])).strip()
+    if not (image_url.startswith("/static/images/") or image_url.startswith("/static/uploads/")):
+        image_url = row["image_url"]
+    con.execute("UPDATE menu SET name=?,price=?,category=?,image_url=?,active=1 WHERE id=?",
+                (name, price, category, image_url, item_id))
+    con.commit()
+    updated = con.execute("SELECT * FROM menu WHERE id=?", (item_id,)).fetchone()
+    con.close()
+    return jsonify(ok=True, item=dict(updated))
 
 @app.route("/api/sales", methods=["POST"])
 def create_sale():
