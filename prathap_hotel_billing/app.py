@@ -30,6 +30,7 @@ DEFAULT_MENU = [
     ("Chicken Biriyani", 140, "Rice", "/static/images/chicken biriyani.jpeg"),
     ("Egg Biriyani", 80, "Rice", "/static/images/egg biriyaniii.jpeg"),
     ("Chicken Fry", 100, "Side Dishes", "/static/images/chicken fry.jpeg"),
+    ("vadai", 10, "Side Dishes", "/static/images/boil egg.jpeg"),
      ("Chicken 65", 50, "Side Dishes", "/static/images/65.jpeg"),
     ("Fried Fish", 50, "Side Dishes", "/static/images/fish fry.jpeg"),
     ("Crab Nandu", 60, "Side Dishes", "/static/images/nandu.jpeg"),
@@ -83,6 +84,7 @@ def init_db():
         "Chicken Biriyani": "/static/images/chicken biriyani.jpeg",
         "Egg Biriyani": "/static/images/egg biriyaniii.jpeg",
         "Chicken Fry": "/static/images/chicken fry.jpeg",
+        "vadai": "/static/images/vadai.jpeg",
         "Chicken 65": "/static/images/65.jpeg",
         "Fried Fish": "/static/images/fish fry.jpeg",
         "Crab Nandu": "/static/images/nandu.jpeg",
@@ -96,6 +98,10 @@ def init_db():
             "UPDATE menu SET image_url=? WHERE name=?",
             (image, name)
         )
+        con.execute(
+        "DELETE FROM menu WHERE name = ?",
+        ("Egg Veechu Porata",)
+    )
 
     con.commit()
     con.close()
