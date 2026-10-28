@@ -44,26 +44,45 @@ def db():
     con.row_factory = sqlite3.Row
     return con
 
+
 def init_db():
     con = db()
-    con.execute("""CREATE TABLE IF NOT EXISTS menu (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL, price REAL NOT NULL, category TEXT NOT NULL,
-        image_url TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1
-    )""")
-    con.execute("""CREATE TABLE IF NOT EXISTS sales (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT NOT NULL, items_json TEXT NOT NULL,
-        subtotal REAL NOT NULL, payment_method TEXT NOT NULL,
-        amount_received REAL NOT NULL DEFAULT 0, change_due REAL NOT NULL DEFAULT 0,
-        payment_status TEXT NOT NULL DEFAULT 'paid', note TEXT DEFAULT ''
-    )""")
-    
-    count = con.execute("SELECT COUNT(*) FROM menu").fetchone()[0]
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS menu (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            price REAL NOT NULL,
+            category TEXT NOT NULL,
+            image_url TEXT NOT NULL,
+            active INTEGER NOT NULL DEFAULT 1
+        )
+    """)
+
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            items_json TEXT NOT NULL,
+            subtotal REAL NOT NULL,
+            payment_method TEXT NOT NULL,
+            amount_received REAL NOT NULL DEFAULT 0,
+            change_due REAL NOT NULL DEFAULT 0,
+            payment_status TEXT NOT NULL DEFAULT 'paid',
+            note TEXT DEFAULT ''
+        )
+    """)
+
+    count = con.execute(
+        "SELECT COUNT(*) FROM menu"
+    ).fetchone()[0]
 
     if count == 0:
         con.executemany(
-            "INSERT INTO menu(name,price,category,image_url) VALUES(?,?,?,?)",
+            """
+            INSERT INTO menu (name, price, category, image_url)
+            VALUES (?, ?, ?, ?)
+            """,
             DEFAULT_MENU
         )
 
